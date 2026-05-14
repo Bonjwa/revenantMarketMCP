@@ -53,4 +53,4 @@ def get_market_data(
 
 
 if __name__ == "__main__":
-    mcp.run(transport="http")
+    mcp.run(transport="http", port=8000, host="https://revenantmarketmcp-production.up.railway.app")
