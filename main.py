@@ -1,7 +1,9 @@
 from fastmcp import FastMCP
-import httpx
+import httpx, os
 
-mcp = FastMCP("Revenant Elegy Market MCP Server")
+
+PORT = os.environ.get("PORT", 8000)
+mcp = FastMCP("Revenant Elegy Market MCP Server", host="0.0.0.0", port=PORT)
 
 BASE_URL = "https://revenantelegy.com/api/v1.0/market/"
 
@@ -53,4 +55,4 @@ def get_market_data(
 
 
 if __name__ == "__main__":
-    mcp.run(transport="http", port=8000, host="https://revenantmarketmcp-production.up.railway.app")
+    mcp.run(transport="http")
