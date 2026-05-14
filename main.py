@@ -3,7 +3,7 @@ import httpx, os
 
 
 PORT = os.environ.get("PORT", 8000)
-mcp = FastMCP("Revenant Elegy Market MCP Server", host="0.0.0.0", port=PORT)
+mcp = FastMCP("Revenant Elegy Market MCP Server", port=PORT)
 
 BASE_URL = "https://revenantelegy.com/api/v1.0/market/"
 
