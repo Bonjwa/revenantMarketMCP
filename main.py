@@ -1,43 +1,56 @@
 from fastmcp import FastMCP
-import httpx, json
+import httpx
 
-mcp = FastMCP("Elegy Scammer MCP Server")
+mcp = FastMCP("Revenant Elegy Market MCP Server")
+
+BASE_URL = "https://revenantelegy.com/api/v1.0/market/"
 
 @mcp.tool
-def get_market_data(search=None, sort=None, sort_direction=None, page_size=None, etc=None, etc_value=None):
-    """Fetch and return revenues market data from the Revenant Elegy API.
-
-    This MCP server tool builds a query URL from optional filter and sort parameters,
-    calls the Revenant Elegy market endpoint, and returns the API response as a
-    pretty-printed JSON string.
+def get_market_data(
+    search: str | None = None,
+    sort: str | None = None,
+    sort_direction: str | None = None,
+    page_size: int | None = None,
+    extra_params: dict | None = None,
+) -> dict:
+    """Fetch marketplace listings from the Revenant Elegy market API.
 
     Parameters:
-        search (str | None): Optional search text for matching marketplace items.
-        sort (str | None): Optional sort field, such as 'price'.
-        sort_direction (str | None): Optional direction for sorting, e.g. 'asc' or 'desc'.
-        page_size (int | None): Optional number of results per page.
-        etc (str | None): Optional custom query parameter name to append.
-        etc_value (str | None): Optional value for the custom query parameter.
+        search: Optional search term to filter items by name or description.
+        sort: Field to sort results by (e.g. 'price', 'name').
+        sort_direction: Sort order — 'asc' or 'desc'.
+        page_size: Number of results to return per page.
+        extra_params: Optional dict of additional query parameters to include.
 
     Returns:
-        str: Pretty-printed JSON response from the market API.
+        Parsed JSON response from the market API as a dict.
+
+    Raises:
+        ValueError: If the API returns a non-2xx status code.
     """
-    if etc and etc_value:
-        extraParameter = f"&{etc}={etc_value}"
-    else:
-        extraParameter = ""
+    params: dict = {}
+
     if search is not None:
-        searchParams = f"&search={search}"
-    else:
-        searchParams = None
+        params["search"] = search
+    if sort is not None:
+        params["sort"] = sort
     if sort_direction is not None:
-        sort="price"
+        params["sort_dir"] = sort_direction
+    if page_size is not None:
+        params["page_size"] = page_size
+    if extra_params:
+        params.update(extra_params)
 
-    market_url = f"https://revenantelegy.com/api/v1.0/market/?sort={sort}&sort_dir={sort_direction}&page_size={page_size}+{searchParams}+{extraParameter}" 
-    market_data_unparsed = httpx.get(market_url)
-    market_data_pretty = json.dumps(market_data_unparsed.json(), indent=1)
+    try:
+        response = httpx.get(BASE_URL, params=params, timeout=10.0)
+        response.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise ValueError(f"Market API returned {e.response.status_code}: {e.response.text}") from e
+    except httpx.RequestError as e:
+        raise ValueError(f"Failed to reach market API: {e}") from e
 
-    return market_data_pretty
+    return response.json()
 
-if __name__=="__main__":
-    mcp.run(transport='http')
+
+if __name__ == "__main__":
+    mcp.run(transport="http")
